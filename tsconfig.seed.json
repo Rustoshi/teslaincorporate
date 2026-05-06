@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "outDir": "./.seed-out",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["scripts/**/*.ts", "models/**/*.ts", "lib/**/*.ts"],
+  "exclude": ["node_modules"]
+}

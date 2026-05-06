@@ -1,0 +1,206 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --color-muted: #a1a1aa;
+  --color-tesla-red: #e82127;
+}
+
+html,
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  margin: 0;
+  padding: 0;
+  max-width: 100vw;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
+}
+
+/* Disable smooth scroll on mobile to prevent "snap back" bugs */
+@media (max-width: 768px) {
+
+  html,
+  body {
+    scroll-behavior: auto !important;
+    /* Removed overscroll-behavior-y: none - it blocks scrolling on Android */
+  }
+}
+
+/* Subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+/* ─── Glassmorphism utility ─── */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ─── Glow pulse animation ─── */
+@keyframes glow-pulse {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(232, 33, 39, 0.6));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 20px rgba(232, 33, 39, 0.9)) drop-shadow(0 0 40px rgba(232, 33, 39, 0.4));
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* ─── Floating particles ─── */
+@keyframes float-up {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-100vh) translateX(20px);
+    opacity: 0;
+  }
+}
+
+@keyframes float-up-alt {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.7;
+  }
+
+  90% {
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: translateY(-100vh) translateX(-15px);
+    opacity: 0;
+  }
+}
+
+/* ─── Scroll indicator bounce ─── */
+@keyframes bounce-subtle {
+
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+/* ─── Scanline overlay effect ─── */
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.scanline-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(232, 33, 39, 0.03) 2px,
+      rgba(232, 33, 39, 0.03) 4px);
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* ─── Button glow ─── */
+@keyframes border-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(232, 33, 39, 0);
+  }
+
+  50% {
+    box-shadow: 0 0 15px rgba(232, 33, 39, 0.3);
+  }
+}
+
+/* ─── Ken Burns slideshow ─── */
+@keyframes kenburns-left {
+  0% {
+    transform: scale(1.08) translateX(2%);
+  }
+
+  100% {
+    transform: scale(1.02) translateX(-2%);
+  }
+}
+
+@keyframes kenburns-right {
+  0% {
+    transform: scale(1.08) translateX(-2%);
+  }
+
+  100% {
+    transform: scale(1.02) translateX(2%);
+  }
+}
+
+/* ─── Mobile Scroll Stability ─── */
+@media (max-width: 768px) {
+
+  /* Stabilize mobile body scroll */
+  html,
+  body {
+    height: auto;
+    min-height: 100%;
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto !important;
+  }
+}
