@@ -284,8 +284,8 @@ export default function CustomerReviews() {
                     className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 mb-16 sm:mb-20"
                 >
                     {[
-                        { label: "Active Investors", value: 12400, suffix: "+" },
-                        { label: "Capital Deployed", value: 840, suffix: "M+" },
+                        { label: "Active Investors", value: 110100, suffix: "+" },
+                        { label: "Capital Deployed", value: 1.8, suffix: "B+" },
                         { label: "Avg. Satisfaction", value: 4.9, suffix: "/5", isDecimal: true },
                         { label: "Countries", value: 68, suffix: "+" },
                     ].map((stat, i) => (
