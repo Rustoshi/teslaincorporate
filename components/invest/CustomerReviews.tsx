@@ -285,7 +285,7 @@ export default function CustomerReviews() {
                 >
                     {[
                         { label: "Active Investors", value: 110100, suffix: "+" },
-                        { label: "Capital Deployed", value: 1.8, suffix: "B+" },
+                        { label: "Capital Deployed", value: 1.8, suffix: "B+", isDecimal: true },
                         { label: "Avg. Satisfaction", value: 4.9, suffix: "/5", isDecimal: true },
                         { label: "Countries", value: 68, suffix: "+" },
                     ].map((stat, i) => (
