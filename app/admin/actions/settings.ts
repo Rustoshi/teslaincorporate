@@ -6,6 +6,7 @@ import PaymentOption from "@/models/PaymentOption";
 import BankPaymentOption from "@/models/BankPaymentOption";
 import InvestmentPlan from "@/models/InvestmentPlan";
 import SupportSettings from "@/models/SupportSettings";
+import ReferralSettings from "@/models/ReferralSettings";
 import WireTransferOption from "@/models/WireTransferOption";
 import DirectPaymentOption from "@/models/DirectPaymentOption";
 import User from "@/models/User";
@@ -284,5 +285,31 @@ export async function updateAdminPassword(formData: FormData) {
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message || "An error occurred" };
+    }
+}
+
+// --- REFERRAL SETTINGS ACTIONS ---
+export async function updateReferralSettings(formData: FormData) {
+    try {
+        await dbConnect();
+        const bonusAmount = Number(formData.get('bonusAmount'));
+
+        if (isNaN(bonusAmount) || bonusAmount < 0) {
+            return { success: false, error: "Bonus amount must be a non-negative number." };
+        }
+
+        let settings = await ReferralSettings.findOne();
+        if (settings) {
+            settings.bonusAmount = bonusAmount;
+            await settings.save();
+        } else {
+            await ReferralSettings.create({ bonusAmount });
+        }
+
+        revalidatePath('/admin/settings');
+        revalidatePath('/dashboard/referrals');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
     }
 }

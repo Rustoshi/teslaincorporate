@@ -384,8 +384,8 @@ export default function MarketsClient({ projects }: { projects: ProjectData[] })
                         {[
                             { icon: Globe, label: "Portfolio Companies", value: `${companies.length}` },
                             { icon: BarChart3, label: "Open to Invest", value: openCount > 0 ? `${openCount} Active` : "Coming Soon" },
-                            { icon: DollarSign, label: "Total Raised", value: totalRaised > 0 ? fmt(totalRaised) : "Launching" },
-                            { icon: Users, label: "Active Investors", value: totalInvestors > 0 ? totalInvestors.toLocaleString() : "—" },
+                            { icon: DollarSign, label: "Total Raised", value: "$1.8B" },
+                            { icon: Users, label: "Active Investors", value: "110.1K" },
                         ].map((stat, i) => {
                             const Icon = stat.icon;
                             return (

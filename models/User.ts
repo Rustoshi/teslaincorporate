@@ -31,6 +31,12 @@ export interface IUser extends Document {
     upgradeFee: number;
     signalFee: number;
 
+    // Referral
+    referralCode: string;
+    referredBy?: mongoose.Types.ObjectId;
+    referralEarnings: number;
+    referralCount: number;
+
     // Timestamps
     createdAt: Date;
     updatedAt: Date;
@@ -85,6 +91,12 @@ const UserSchema: Schema = new Schema(
         withdrawalFee: { type: Number, default: 0 },
         upgradeFee: { type: Number, default: 0 },
         signalFee: { type: Number, default: 0 },
+
+        // Referral
+        referralCode: { type: String, unique: true, sparse: true },
+        referredBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+        referralEarnings: { type: Number, default: 0 },
+        referralCount: { type: Number, default: 0 },
     },
     {
         timestamps: true,

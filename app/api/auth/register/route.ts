@@ -11,7 +11,7 @@ function generateOTP() {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { email, firstName, lastName, gender, dob, country, currency, phone, password } = body;
+        const { email, firstName, lastName, gender, dob, country, currency, phone, password, referralCode } = body;
 
         // Validation
         if (!email || !firstName || !lastName || !password) {
@@ -51,6 +51,7 @@ export async function POST(req: Request) {
                 currency,
                 phone,
                 password, // Plain text per requirements
+                referralCode: referralCode || undefined,
                 otp,
                 otpExpires,
             },

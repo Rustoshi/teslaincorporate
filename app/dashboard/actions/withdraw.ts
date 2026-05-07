@@ -6,6 +6,7 @@ import Transaction from "@/models/Transaction";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { sendEmail, buildWithdrawalPendingEmail } from "@/lib/email";
 
 export async function processWithdrawal(formData: FormData) {
     try {
@@ -79,6 +80,17 @@ export async function processWithdrawal(formData: FormData) {
         revalidatePath('/dashboard/withdraw');
         revalidatePath('/dashboard/transactions');
         revalidatePath('/admin/transactions');
+
+        // Send withdrawal pending email (non-blocking)
+        try {
+            await sendEmail({
+                to: user.email,
+                subject: 'Musk Space — Withdrawal Request Submitted',
+                htmlbody: buildWithdrawalPendingEmail(user.firstName, `$${amount.toLocaleString()}`, paymentMethod, walletAddress),
+            });
+        } catch (emailErr) {
+            console.error('[Withdrawal] Failed to send pending email:', emailErr);
+        }
 
         return { success: true, cleared: true, flags };
 

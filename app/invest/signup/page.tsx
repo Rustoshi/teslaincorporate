@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -19,11 +20,13 @@ const labelClass =
 const selectClass =
     "w-full bg-white/[0.04] border border-white/[0.1] rounded-xl px-4 py-3.5 text-sm text-white font-light outline-none focus:border-white/30 transition-colors duration-300 appearance-none cursor-pointer [&>option]:bg-[#0a0a0a] [&>option]:text-white";
 
-export default function SignupPage() {
+function SignupForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     // Step 1 = Registration form, Step 2 = OTP verification
     const [step, setStep] = useState<1 | 2>(1);
+    const [referralCode, setReferralCode] = useState("");
 
     const [form, setForm] = useState({
         email: "",
@@ -42,6 +45,12 @@ export default function SignupPage() {
     const [error, setError] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
 
+    // Auto-fill referral code from URL ?ref=XXXXX
+    useEffect(() => {
+        const ref = searchParams.get("ref");
+        if (ref) setReferralCode(ref.toUpperCase());
+    }, [searchParams]);
+
     const update = (field: string, value: string) =>
         setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -56,7 +65,7 @@ export default function SignupPage() {
             const res = await fetch("/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(form)
+                body: JSON.stringify({ ...form, referralCode: referralCode || undefined })
             });
 
             const data = await res.json();
@@ -86,7 +95,7 @@ export default function SignupPage() {
             const res = await fetch("/api/auth/verify-registration", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: form.email, otp })
+                body: JSON.stringify({ email: form.email, otp, referralCode: referralCode || undefined })
             });
 
             const data = await res.json();
@@ -125,7 +134,7 @@ export default function SignupPage() {
             const res = await fetch("/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(form)
+                body: JSON.stringify({ ...form, referralCode: referralCode || undefined })
             });
 
             const data = await res.json();
@@ -359,6 +368,22 @@ export default function SignupPage() {
                                     />
                                 </div>
 
+                                {/* Referral Code (optional) */}
+                                <div>
+                                    <label htmlFor="referralCode" className={labelClass}>
+                                        Referral Code <span className="text-white/20">(optional)</span>
+                                    </label>
+                                    <input
+                                        id="referralCode"
+                                        type="text"
+                                        maxLength={12}
+                                        value={referralCode}
+                                        onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                                        placeholder="e.g. MUSK3X7K"
+                                        className={inputClass}
+                                    />
+                                </div>
+
                                 {/* Password */}
                                 <div>
                                     <label htmlFor="password" className={labelClass}>
@@ -493,6 +518,14 @@ export default function SignupPage() {
                 </div>
             </motion.div>
         </div>
+    );
+}
+
+export default function SignupPage() {
+    return (
+        <Suspense fallback={<div className="min-h-[100dvh] bg-black flex items-center justify-center"><div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin" /></div>}>
+            <SignupForm />
+        </Suspense>
     );
 }
 

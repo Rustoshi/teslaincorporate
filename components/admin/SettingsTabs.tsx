@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, Wallet, TrendingUp, Plus, Edit, Trash2, Check, X, Loader2, Save, Shield, Landmark, MessageSquare } from "lucide-react";
-import { updateCompanyDetails, addPaymentOption, deletePaymentOption, addBankPaymentOption, deleteBankPaymentOption, addWireTransferOption, deleteWireTransferOption, addDirectPaymentOption, deleteDirectPaymentOption, addInvestmentPlan, updateInvestmentPlan, deleteInvestmentPlan, updateAdminPassword, updateSupportSettings } from "@/app/admin/actions/settings";
+import { Building2, Wallet, TrendingUp, Plus, Edit, Trash2, Check, X, Loader2, Save, Shield, Landmark, MessageSquare, Users } from "lucide-react";
+import { updateCompanyDetails, addPaymentOption, deletePaymentOption, addBankPaymentOption, deleteBankPaymentOption, addWireTransferOption, deleteWireTransferOption, addDirectPaymentOption, deleteDirectPaymentOption, addInvestmentPlan, updateInvestmentPlan, deleteInvestmentPlan, updateAdminPassword, updateSupportSettings, updateReferralSettings } from "@/app/admin/actions/settings";
 import { useRouter } from "next/navigation";
 
-export default function SettingsTabs({ companyDetails, paymentOptions, bankPaymentOptions, wireTransferOptions, directPaymentOptions, investmentPlans, supportSettings }: { companyDetails: any, paymentOptions: any[], bankPaymentOptions: any[], wireTransferOptions: any[], directPaymentOptions: any[], investmentPlans: any[], supportSettings: any }) {
+export default function SettingsTabs({ companyDetails, paymentOptions, bankPaymentOptions, wireTransferOptions, directPaymentOptions, investmentPlans, supportSettings, referralSettings }: { companyDetails: any, paymentOptions: any[], bankPaymentOptions: any[], wireTransferOptions: any[], directPaymentOptions: any[], investmentPlans: any[], supportSettings: any, referralSettings: any }) {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<'general' | 'payment' | 'plans' | 'security' | 'support'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'payment' | 'plans' | 'security' | 'support' | 'referral'>('general');
+
+    // Referral settings state
+    const [referralBonus, setReferralBonus] = useState<number>(referralSettings?.bonusAmount ?? 10);
+    const [isSavingReferral, setIsSavingReferral] = useState(false);
+    const [referralSaved, setReferralSaved] = useState(false);
 
     // Support widget state
     const [supportMode, setSupportMode] = useState<'smartsupp' | 'telegram'>(supportSettings?.mode ?? 'smartsupp');
@@ -189,6 +194,7 @@ export default function SettingsTabs({ companyDetails, paymentOptions, bankPayme
                 {renderTabButton('plans', 'Investment Plans', TrendingUp)}
                 {renderTabButton('security', 'Security', Shield)}
                 {renderTabButton('support', 'Support Widget', MessageSquare)}
+                {renderTabButton('referral', 'Referral Program', Users)}
             </div>
 
             {/* Tab Content Area */}
@@ -887,6 +893,69 @@ export default function SettingsTabs({ companyDetails, paymentOptions, bankPayme
                             <button disabled={isSavingSecurity} type="submit" className="flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white px-6 py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-colors">
                                 {isSavingSecurity ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                                 Update Password
+                            </button>
+                        </div>
+                    </form>
+                )}
+                {/* REFERRAL SETTINGS */}
+                {activeTab === 'referral' && (
+                    <form
+                        onSubmit={async (e) => {
+                            e.preventDefault();
+                            setIsSavingReferral(true);
+                            setReferralSaved(false);
+                            const formData = new FormData(e.currentTarget);
+                            await updateReferralSettings(formData);
+                            setIsSavingReferral(false);
+                            setReferralSaved(true);
+                            router.refresh();
+                        }}
+                        className="space-y-6 max-w-2xl animate-in fade-in duration-300"
+                    >
+                        <h3 className="text-sm font-bold tracking-widest text-white uppercase font-montserrat mb-6">Referral Program Settings</h3>
+                        <p className="text-xs text-white/50 leading-relaxed">Configure the referral bonus amount that gets credited to a referrer when their referred user makes their first deposit.</p>
+
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase tracking-widest text-white/40">Referral Bonus Amount ($) <span className="text-red-500">*</span></label>
+                                <input
+                                    name="bonusAmount"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={referralBonus}
+                                    onChange={(e) => setReferralBonus(Number(e.target.value))}
+                                    required
+                                    className="w-full bg-white/[0.03] border border-white/[0.1] rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                                />
+                                <p className="text-[10px] text-white/30 mt-1">This is the flat bonus credited to the referrer&apos;s balance when their referral makes a first deposit.</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-white/[0.02] border border-white/[0.08] rounded-xl p-5">
+                            <h4 className="text-xs font-bold uppercase tracking-widest text-white/50 mb-3">Current Configuration</h4>
+                            <div className="flex items-center gap-4">
+                                <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-3">
+                                    <p className="text-[9px] uppercase tracking-widest text-green-500/70 mb-1">Bonus Per Referral</p>
+                                    <p className="text-xl font-bold text-green-500">${referralBonus}</p>
+                                </div>
+                                <div className="text-xs text-white/40 leading-relaxed">
+                                    When a new user signs up with a referral code and makes their first deposit, the referrer will be credited <strong className="text-white">${referralBonus}</strong> to their account balance.
+                                </div>
+                            </div>
+                        </div>
+
+                        {referralSaved && (
+                            <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-lg flex items-center gap-3 animate-in fade-in">
+                                <Check className="w-4 h-4 text-green-400" />
+                                <p className="text-[11px] text-green-200 uppercase tracking-widest font-bold">Referral settings updated successfully.</p>
+                            </div>
+                        )}
+
+                        <div className="pt-4 border-t border-white/[0.05]">
+                            <button disabled={isSavingReferral} type="submit" className="flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white px-6 py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-colors">
+                                {isSavingReferral ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                Save Referral Settings
                             </button>
                         </div>
                     </form>

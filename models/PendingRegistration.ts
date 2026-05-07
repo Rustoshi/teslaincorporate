@@ -10,6 +10,7 @@ export interface IPendingRegistration extends Document {
     currency: string;
     phone: string;
     password: string;
+    referralCode?: string;
     otp: string;
     otpExpires: Date;
     createdAt: Date;
@@ -27,6 +28,7 @@ const PendingRegistrationSchema: Schema = new Schema(
         currency: { type: String, required: true },
         phone: { type: String, required: true },
         password: { type: String, required: true },
+        referralCode: { type: String },
         otp: { type: String, required: true },
         otpExpires: { type: Date, required: true },
     },

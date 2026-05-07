@@ -6,6 +6,7 @@ import PaymentOption from "@/models/PaymentOption";
 import BankPaymentOption from "@/models/BankPaymentOption";
 import InvestmentPlan from "@/models/InvestmentPlan";
 import SupportSettings from "@/models/SupportSettings";
+import ReferralSettings from "@/models/ReferralSettings";
 import WireTransferOption from "@/models/WireTransferOption";
 import DirectPaymentOption from "@/models/DirectPaymentOption";
 import SettingsTabs from "@/components/admin/SettingsTabs";
@@ -78,6 +79,12 @@ export default async function AdminSettingsPage() {
         telegramUsername: rawSupport.telegramUsername ?? '',
     };
 
+    // Fetch Referral Settings
+    let rawReferral = await ReferralSettings.findOne().lean() as any;
+    const referralSettings = {
+        bonusAmount: rawReferral?.bonusAmount ?? 10,
+    };
+
     // Serialize Company Details
     const serializedCompanyDetails = {
         ...companyDetails,
@@ -102,6 +109,7 @@ export default async function AdminSettingsPage() {
                 directPaymentOptions={directPaymentOptions}
                 investmentPlans={investmentPlans}
                 supportSettings={supportSettings}
+                referralSettings={referralSettings}
             />
         </div>
     );

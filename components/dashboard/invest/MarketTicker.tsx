@@ -1,16 +1,43 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 
-const tickerItems = [
-    { symbol: "BTC", price: "$64,230.00", change: "+2.4%", positive: true },
-    { symbol: "ETH", price: "$3,450.20", change: "+1.1%", positive: true },
-    { symbol: "TSLA", price: "$202.64", change: "-1.2%", positive: false },
-    { symbol: "SPACEX (EST)", price: "$110.50", change: "+5.0%", positive: true },
-    { symbol: "X (HLD)", price: "$45.20", change: "0.0%", positive: true },
+interface TickerItem {
+    symbol: string;
+    price: string;
+    change: string;
+    positive: boolean;
+}
+
+const FALLBACK: TickerItem[] = [
+    { symbol: "BTC", price: "—", change: "—", positive: true },
+    { symbol: "ETH", price: "—", change: "—", positive: true },
+    { symbol: "TSLA", price: "—", change: "—", positive: true },
 ];
 
+const POLL_INTERVAL = 60_000; // Refresh every 60 seconds
+
 export default function MarketTicker() {
+    const [tickerItems, setTickerItems] = useState<TickerItem[]>(FALLBACK);
+
+    const fetchPrices = useCallback(async () => {
+        try {
+            const res = await fetch("/api/market-prices");
+            if (!res.ok) return;
+            const data: TickerItem[] = await res.json();
+            if (data.length > 0) setTickerItems(data);
+        } catch {
+            // Keep existing data on error
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchPrices();
+        const interval = setInterval(fetchPrices, POLL_INTERVAL);
+        return () => clearInterval(interval);
+    }, [fetchPrices]);
+
     return (
         <div className="w-full bg-white/[0.02] border-b border-white/[0.05] overflow-hidden flex items-center h-10 px-4">
             <div className="text-[10px] font-bold tracking-widest uppercase text-white/40 mr-6 shrink-0 flex items-center">

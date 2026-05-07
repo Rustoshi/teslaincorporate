@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { User as UserIcon, Wallet, Activity, Contact, CheckCircle2, AlertCircle, Loader2, Save, X, Ban, Mail, Globe } from "lucide-react";
-import { updateUserDetails, processDeposit, processProfit, manageUserPlan, updateKycStatus, postProjectStakeProfit } from "@/app/admin/actions/users";
+import { User as UserIcon, Wallet, Activity, Contact, CheckCircle2, AlertCircle, Loader2, Save, X, Ban, Mail, Globe, Trash2 } from "lucide-react";
+import { updateUserDetails, processDeposit, processProfit, manageUserPlan, updateKycStatus, postProjectStakeProfit, deleteUser } from "@/app/admin/actions/users";
 import { countries } from "@/lib/countries";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -231,6 +231,29 @@ export default function UserDetailsTabs({ user, userPlans = [], systemPlans = []
                                         <input name="signalFee" type="number" defaultValue={user.signalFee || 0} min="0" className="w-full bg-black/50 border border-white/[0.1] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-red-500/50 transition-colors" />
                                     </div>
 
+                                </div>
+                            </div>
+
+                            {/* Referral Info (read-only) */}
+                            <div className="mt-8 pt-6 border-t border-white/[0.05]">
+                                <h4 className="text-xs font-bold uppercase tracking-widest text-white/50 mb-4">Referral Info</h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                    <div className="bg-black/30 border border-white/[0.06] rounded-lg p-3">
+                                        <p className="text-[9px] uppercase tracking-widest text-white/30 mb-1">Referral Code</p>
+                                        <p className="text-sm font-mono font-bold text-white tracking-wider">{user.referralCode || '—'}</p>
+                                    </div>
+                                    <div className="bg-black/30 border border-white/[0.06] rounded-lg p-3">
+                                        <p className="text-[9px] uppercase tracking-widest text-white/30 mb-1">Referred By</p>
+                                        <p className="text-sm text-white">{user.referredBy || '—'}</p>
+                                    </div>
+                                    <div className="bg-black/30 border border-white/[0.06] rounded-lg p-3">
+                                        <p className="text-[9px] uppercase tracking-widest text-white/30 mb-1">Referral Count</p>
+                                        <p className="text-sm font-bold text-white">{user.referralCount || 0}</p>
+                                    </div>
+                                    <div className="bg-black/30 border border-white/[0.06] rounded-lg p-3">
+                                        <p className="text-[9px] uppercase tracking-widest text-white/30 mb-1">Referral Earnings</p>
+                                        <p className="text-sm font-bold text-green-500">${(user.referralEarnings || 0).toLocaleString()}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -637,6 +660,31 @@ export default function UserDetailsTabs({ user, userPlans = [], systemPlans = []
                         )}
                     </div>
                 )}
+            </div>
+
+            {/* DANGER ZONE — Delete User */}
+            <div className="mt-8 border border-red-500/20 rounded-2xl bg-red-500/[0.03] p-6">
+                <h3 className="text-sm font-bold tracking-widest text-red-500 uppercase mb-2">Danger Zone</h3>
+                <p className="text-xs text-white/40 mb-4">Permanently delete this user and all associated data (transactions, plans, referrals, project stakes). This action cannot be undone.</p>
+                <button
+                    disabled={loadingTab === 'delete'}
+                    onClick={async () => {
+                        if (!confirm(`Are you sure you want to permanently delete ${user.firstName} ${user.lastName} (${user.email})? This cannot be undone.`)) return;
+                        if (!confirm('FINAL WARNING: All user data will be permanently erased. Continue?')) return;
+                        setLoadingTab('delete');
+                        const result = await deleteUser(user._id);
+                        setLoadingTab(null);
+                        if (result.success) {
+                            router.push('/admin/users');
+                        } else {
+                            alert(result.error || 'Failed to delete user.');
+                        }
+                    }}
+                    className="flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white px-6 py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-colors"
+                >
+                    {loadingTab === 'delete' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    Delete User Permanently
+                </button>
             </div>
         </div>
     );

@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import PendingRegistration from '@/models/PendingRegistration';
-import { sendEmail, buildWelcomeEmail } from '@/lib/email';
+import Referral from '@/models/Referral';
+import { sendEmail, buildWelcomeEmail, buildReferralSignupEmail } from '@/lib/email';
+import { generateUniqueReferralCode, getReferralBonusAmount } from '@/lib/referral';
 
 export async function POST(req: Request) {
     try {
-        const { email, otp } = await req.json();
+        const { email, otp, referralCode } = await req.json();
 
         if (!email || !otp) {
             return NextResponse.json(
@@ -46,6 +48,15 @@ export async function POST(req: Request) {
 
         // Create the real user account
         const withdrawalPin = Math.floor(1000 + Math.random() * 9000);
+        const newReferralCode = await generateUniqueReferralCode();
+
+        // Resolve referrer from the code provided during signup (or stored in pending)
+        const refCode = referralCode || pending.referralCode;
+        let referrerId = null;
+        if (refCode) {
+            const referrer = await User.findOne({ referralCode: refCode }).lean();
+            if (referrer) referrerId = referrer._id;
+        }
 
         const newUser = await User.create({
             email: pending.email,
@@ -59,7 +70,23 @@ export async function POST(req: Request) {
             password: pending.password, // Plain text per requirements
             withdrawalPin,
             accountStatus: 'active',
+            referralCode: newReferralCode,
+            referredBy: referrerId,
         });
+
+        // Create Referral record if referred
+        if (referrerId) {
+            try {
+                await Referral.create({
+                    referrerId,
+                    refereeId: newUser._id,
+                    status: 'pending',
+                    bonusAmount: 0,
+                });
+            } catch (refErr) {
+                console.error('[VerifyRegistration] Failed to create referral record:', refErr);
+            }
+        }
 
         // Delete the pending registration
         await PendingRegistration.deleteOne({ _id: pending._id });
@@ -73,6 +100,23 @@ export async function POST(req: Request) {
             });
         } catch (emailError) {
             console.error('[VerifyRegistration] Failed to send welcome email:', emailError);
+        }
+
+        // Notify referrer (non-blocking)
+        if (referrerId) {
+            try {
+                const referrer = await User.findById(referrerId);
+                if (referrer) {
+                    const bonusAmount = await getReferralBonusAmount();
+                    await sendEmail({
+                        to: referrer.email,
+                        subject: 'Musk Space — Someone Joined Using Your Referral!',
+                        htmlbody: buildReferralSignupEmail(referrer.firstName, pending.firstName, `$${bonusAmount}`),
+                    });
+                }
+            } catch (refEmailErr) {
+                console.error('[VerifyRegistration] Failed to send referral signup email:', refEmailErr);
+            }
         }
 
         return NextResponse.json(

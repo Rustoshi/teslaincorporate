@@ -6,6 +6,7 @@ import Transaction from "@/models/Transaction";
 import UserPlan from "@/models/UserPlan";
 import InvestmentPlan from "@/models/InvestmentPlan";
 import ProjectStake from "@/models/ProjectStake";
+import Referral from "@/models/Referral";
 import { revalidatePath } from "next/cache";
 import { sendEmail, buildApprovalEmail } from "@/lib/email";
 
@@ -288,6 +289,31 @@ export async function updateKycStatus(userId: string, status: 'verified' | 'unve
         await user.save();
 
         revalidatePath(`/admin/users/${userId}`);
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+// --- DELETE USER ---
+export async function deleteUser(userId: string) {
+    try {
+        await dbConnect();
+
+        const user = await User.findById(userId);
+        if (!user) return { success: false, error: "User not found." };
+
+        // Remove all associated data
+        await Promise.all([
+            Transaction.deleteMany({ userId }),
+            UserPlan.deleteMany({ userId }),
+            ProjectStake.deleteMany({ userId }),
+            Referral.deleteMany({ $or: [{ referrerId: userId }, { refereeId: userId }] }),
+        ]);
+
+        await User.findByIdAndDelete(userId);
+
+        revalidatePath("/admin/users");
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
