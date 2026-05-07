@@ -173,7 +173,7 @@ export default function SettingsTabs({ companyDetails, paymentOptions, bankPayme
         setIsSavingSecurity(false);
     };
 
-    const renderTabButton = (id: 'general' | 'payment' | 'plans' | 'security' | 'support', label: string, Icon: any) => (
+    const renderTabButton = (id: 'general' | 'payment' | 'plans' | 'security' | 'support' | 'referral', label: string, Icon: any) => (
         <button
             onClick={() => setActiveTab(id as any)}
             className={`flex items-center gap-2 px-6 py-4 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${activeTab === id
