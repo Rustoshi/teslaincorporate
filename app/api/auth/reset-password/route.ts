@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
         // Double check the OTP is still valid right before the reset
         const user = await User.findOne({
-            email,
+            email: email.trim().toLowerCase(),
             resetPasswordOtp: otp,
             resetPasswordExpires: { $gt: Date.now() }
         });

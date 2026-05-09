@@ -13,7 +13,7 @@ export async function POST(req: Request) {
         await dbConnect();
 
         const user = await User.findOne({
-            email,
+            email: email.trim().toLowerCase(),
             resetPasswordOtp: otp,
             resetPasswordExpires: { $gt: Date.now() }
         });
