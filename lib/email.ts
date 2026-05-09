@@ -1,6 +1,21 @@
-const ZEPTO_TOKEN = process.env.ZEPTOMAIL_TOKEN?.trim();
-const FROM_EMAIL = (process.env.ZEPTOMAIL_FROM_EMAIL || "noreply@muskspace.com").trim();
-const FROM_NAME = (process.env.ZEPTOMAIL_FROM_NAME || "Musk Space").trim();
+import nodemailer from "nodemailer";
+
+const SMTP_HOST = process.env.SMTP_HOST || "smtp.zoho.com";
+const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
+const SMTP_USER = process.env.SMTP_USER || "";
+const SMTP_PASS = process.env.SMTP_PASS || "";
+const FROM_EMAIL = (process.env.SMTP_FROM_EMAIL || SMTP_USER).trim();
+const FROM_NAME = (process.env.SMTP_FROM_NAME || "Musk Space").trim();
+
+const transporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465,
+    auth: {
+        user: SMTP_USER,
+        pass: SMTP_PASS,
+    },
+});
 
 export async function sendEmail({
     to,
@@ -11,29 +26,21 @@ export async function sendEmail({
     subject: string;
     htmlbody: string;
 }) {
-    if (!ZEPTO_TOKEN) {
-        console.error("[sendEmail] ZEPTOMAIL_TOKEN is not configured.");
+    if (!SMTP_USER || !SMTP_PASS) {
+        console.error("[sendEmail] SMTP credentials are not configured.");
         throw new Error("Email service is not configured.");
     }
 
-    const res = await fetch("https://api.zeptomail.com/v1.1/email", {
-        method: "POST",
-        headers: {
-            Authorization: `Zoho-enczapikey ${ZEPTO_TOKEN}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            from: { address: FROM_EMAIL, name: FROM_NAME },
-            to: [{ email_address: { address: to } }],
+    try {
+        await transporter.sendMail({
+            from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
+            to,
             subject,
-            htmlbody,
-        }),
-    });
-
-    if (!res.ok) {
-        const err = await res.text();
-        console.error("[sendEmail] ZeptoMail error:", res.status, err);
-        throw new Error(`Failed to send email: ${err}`);
+            html: htmlbody,
+        });
+    } catch (err: any) {
+        console.error("[sendEmail] SMTP error:", err.message);
+        throw new Error(`Failed to send email: ${err.message}`);
     }
 }
 
