@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { getReferralStats } from "@/app/dashboard/actions/referral";
 
-const SITE_URL = "https://teslaincr.pro";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://teslaincorporate.pro";
 
 export default function ReferralsClient() {
     const [data, setData] = useState<any>(null);
