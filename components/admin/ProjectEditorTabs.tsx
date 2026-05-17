@@ -332,57 +332,66 @@ export default function ProjectEditorTabs({ mode, projectId, initialData, stakes
                                 onChange={e => {
                                     const file = e.target.files?.[0];
                                     if (file) handleHeroImageUpload(file);
+                                    e.target.value = "";
                                 }}
                             />
-                            {heroImage ? (
-                                <div className="relative group">
-                                    <div className="h-36 rounded-xl overflow-hidden border border-white/[0.08]">
-                                        <img src={heroImage} alt="" className="w-full h-full object-cover" />
+                            <div className="space-y-3">
+                                {/* Image Preview */}
+                                {heroImage && (
+                                    <div className="h-36 rounded-xl overflow-hidden border border-white/[0.08] bg-white/[0.02]">
+                                        <img 
+                                            src={heroImage} 
+                                            alt="Hero preview" 
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                            }}
+                                        />
                                     </div>
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => heroImageInputRef.current?.click()}
-                                            disabled={isUploadingImage}
-                                            className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-xs font-bold tracking-widest uppercase text-white transition-all"
-                                        >
-                                            {isUploadingImage ? "Uploading…" : "Replace"}
-                                        </button>
+                                )}
+                                {/* Upload Controls - Always visible */}
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => heroImageInputRef.current?.click()}
+                                        disabled={isUploadingImage}
+                                        className="flex-1 py-3 border border-dashed border-white/[0.15] rounded-xl flex items-center justify-center gap-2 hover:border-white/30 hover:bg-white/[0.02] transition-all duration-200 cursor-pointer disabled:opacity-50"
+                                    >
+                                        {isUploadingImage ? (
+                                            <>
+                                                <svg className="w-4 h-4 text-white/40 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                </svg>
+                                                <span className="text-xs text-white/40">Uploading…</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                                </svg>
+                                                <span className="text-xs text-white/40">{heroImage ? "Replace Image" : "Upload Image"}</span>
+                                            </>
+                                        )}
+                                    </button>
+                                    {heroImage && (
                                         <button
                                             type="button"
                                             onClick={() => setHeroImage("")}
-                                            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-xs font-bold tracking-widest uppercase text-red-400 transition-all"
+                                            className="px-4 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-xs font-medium text-red-400 transition-all"
                                         >
                                             Remove
                                         </button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={() => heroImageInputRef.current?.click()}
-                                    disabled={isUploadingImage}
-                                    className="w-full h-36 border-2 border-dashed border-white/[0.12] rounded-xl flex flex-col items-center justify-center gap-2 hover:border-white/25 hover:bg-white/[0.02] transition-all duration-200 cursor-pointer"
-                                >
-                                    {isUploadingImage ? (
-                                        <>
-                                            <svg className="w-6 h-6 text-white/40 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                            </svg>
-                                            <span className="text-xs text-white/40">Uploading…</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-8 h-8 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                            <span className="text-xs text-white/30">Click to upload hero image</span>
-                                            <span className="text-[10px] text-white/20">PNG, JPG, WebP up to 10MB</span>
-                                        </>
                                     )}
-                                </button>
-                            )}
+                                </div>
+                                {/* URL Input for manual entry */}
+                                <input 
+                                    className={`${inputClass} text-xs`} 
+                                    value={heroImage} 
+                                    onChange={e => setHeroImage(e.target.value)} 
+                                    placeholder="Or paste image URL directly…" 
+                                />
+                            </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
