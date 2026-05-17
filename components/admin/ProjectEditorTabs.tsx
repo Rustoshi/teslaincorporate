@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createProject, updateProject, postProjectYield, toggleMilestoneCompleted } from "@/app/admin/actions/projects";
 
@@ -122,6 +122,38 @@ export default function ProjectEditorTabs({ mode, projectId, initialData, stakes
     // ── Yield Posting ──
     const [yieldPercent, setYieldPercent] = useState("");
     const [yieldSummary, setYieldSummary] = useState<any>(null);
+
+    // ── Image Upload ──
+    const heroImageInputRef = useRef<HTMLInputElement>(null);
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "do2jdvxzh";
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "deposit_proofs";
+
+    async function handleHeroImageUpload(file: File) {
+        if (!file) return;
+        setIsUploadingImage(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", uploadPreset);
+            formData.append("folder", "projects");
+
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!res.ok) throw new Error("Upload failed");
+            const data = await res.json();
+            setHeroImage(data.secure_url);
+            showFeedback("Image uploaded successfully.", true);
+        } catch (err: any) {
+            showFeedback(err.message || "Failed to upload image.", false);
+        } finally {
+            setIsUploadingImage(false);
+        }
+    }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -291,12 +323,65 @@ export default function ProjectEditorTabs({ mode, projectId, initialData, stakes
 
                     <div className="space-y-5">
                         <div>
-                            <label className={labelClass}>Hero Image URL (Cloudinary)</label>
-                            <input className={inputClass} value={heroImage} onChange={e => setHeroImage(e.target.value)} placeholder="https://res.cloudinary.com/…" />
-                            {heroImage && (
-                                <div className="mt-2 h-28 rounded-xl overflow-hidden border border-white/[0.06]">
-                                    <img src={heroImage} alt="" className="w-full h-full object-cover" />
+                            <label className={labelClass}>Hero Image</label>
+                            <input
+                                type="file"
+                                ref={heroImageInputRef}
+                                accept="image/*"
+                                className="hidden"
+                                onChange={e => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleHeroImageUpload(file);
+                                }}
+                            />
+                            {heroImage ? (
+                                <div className="relative group">
+                                    <div className="h-36 rounded-xl overflow-hidden border border-white/[0.08]">
+                                        <img src={heroImage} alt="" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => heroImageInputRef.current?.click()}
+                                            disabled={isUploadingImage}
+                                            className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-xs font-bold tracking-widest uppercase text-white transition-all"
+                                        >
+                                            {isUploadingImage ? "Uploading…" : "Replace"}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setHeroImage("")}
+                                            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-xs font-bold tracking-widest uppercase text-red-400 transition-all"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
                                 </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => heroImageInputRef.current?.click()}
+                                    disabled={isUploadingImage}
+                                    className="w-full h-36 border-2 border-dashed border-white/[0.12] rounded-xl flex flex-col items-center justify-center gap-2 hover:border-white/25 hover:bg-white/[0.02] transition-all duration-200 cursor-pointer"
+                                >
+                                    {isUploadingImage ? (
+                                        <>
+                                            <svg className="w-6 h-6 text-white/40 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            <span className="text-xs text-white/40">Uploading…</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-8 h-8 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <span className="text-xs text-white/30">Click to upload hero image</span>
+                                            <span className="text-[10px] text-white/20">PNG, JPG, WebP up to 10MB</span>
+                                        </>
+                                    )}
+                                </button>
                             )}
                         </div>
                         <div className="grid grid-cols-2 gap-4">
